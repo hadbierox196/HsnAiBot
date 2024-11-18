@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Texting Style Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="overlay">
+    <div class="chat-container">
+      <!-- Search Bar -->
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search messages..." oninput="filterMessages()">
+      </div>
+
+      <div id="chat-window" class="chat-window"></div>
+
+      <!-- Typing Indicator -->
+      <div id="typing-indicator" class="typing-indicator" style="display: none;">Bot is typing...</div>
+      
+      <div class="input-container">
+        <input type="text" id="user-input" placeholder="Type your message..." onkeypress="checkEnter(event)" aria-label="Type your message">
+        <button onclick="sendMessage()" aria-label="Send message">
+          <img src="https://img.icons8.com/?size=100&id=73848&format=png&color=ffffff" alt="Send">
+        </button>
+        <button onclick="sendImage()" aria-label="Send image">
+          <img src="https://img.icons8.com/?size=100&id=5376&format=png&color=ffffff" alt="Camera">
+        </button>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
