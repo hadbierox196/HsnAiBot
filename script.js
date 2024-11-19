@@ -75,7 +75,7 @@ async function fetchAndDisplayImage(prompt) {
 // Function to add recommended questions below bot's response
 async function addRecommendedQuestions(content, parentElement) {
   try {
-    const response = await fetch(`https://text.pollinations.ai/recommendations/${encodeURIComponent(content)}`);
+    const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
     if (response.ok) {
       const recommendations = await response.json(); // Assuming API returns JSON
       if (recommendations.questions) {
