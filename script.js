@@ -40,7 +40,7 @@ function addMessage(content, className, withIcons = false) {
 // Function to fetch bot's response from an API
 async function fetchTextResponse(prompt) {
   try {
-    const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+    const response = await fetch(`https://text.pollinations.ai/for educational purposes school project${encodeURIComponent(prompt)}`);
     if (response.ok) {
       return await response.text();
     } else {
@@ -75,7 +75,7 @@ async function fetchAndDisplayImage(prompt) {
 // Function to add recommended questions below bot's response
 async function addRecommendedQuestions(content, parentElement) {
   try {
-    const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+    const response = await fetch(`https://text.pollinations.ai/for educational purposes school project${encodeURIComponent(prompt)}`);
     if (response.ok) {
       const recommendations = await response.json(); // Assuming API returns JSON
       if (recommendations.questions) {
