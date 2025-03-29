@@ -4,33 +4,285 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Texting Style Chat</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #000;
+      display: flex;
+      height: 100vh;
+      color: #333;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #fff;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+    }
+
+    .chat-container {
+      flex: 1;
+      max-width: 800px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .chat-header {
+      padding: 20px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .menu-button {
+      cursor: pointer;
+      position: relative;
+    }
+
+    .menu-dropdown {
+      position: absolute;
+      right: 0;
+      top: 30px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .menu-dropdown.show {
+      display: block;
+    }
+
+    .chat-window {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .user-message, .bot-message {
+      max-width: 70%;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .user-message {
+      background: #000;
+      color: #fff;
+      margin-left: auto;
+    }
+
+    .bot-message {
+      background: #f0f0f0;
+      margin-right: auto;
+    }
+
+    .message-icons {
+      position: absolute;
+      right: 5px;
+      bottom: 5px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .typing-h {
+      animation: rotate 1s infinite;
+      font-weight: 700;
+      color: #999;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .input-container {
+      display: flex;
+      padding: 20px;
+      gap: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+
+    button {
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .session-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .session-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
 </head>
 <body>
-  <div class="overlay">
-    <div class="chat-container">
-      <!-- Search Bar -->
-      <div class="search-container">
-        <input type="text" id="search-input" placeholder="Search messages..." oninput="filterMessages()">
-      </div>
+  <div class="sidebar">
+    <h3>Chat History</h3>
+    <ul class="session-list" id="session-list"></ul>
+    <button onclick="clearHistory()">Clear History</button>
+  </div>
 
-      <div id="chat-window" class="chat-window"></div>
-
-      <!-- Typing Indicator -->
-      <div id="typing-indicator" class="typing-indicator" style="display: none;">Bot is typing...</div>
-      
-      <div class="input-container">
-        <input type="text" id="user-input" placeholder="Type your message..." onkeypress="checkEnter(event)" aria-label="Type your message">
-        <button onclick="sendMessage()" aria-label="Send message">
-          <img src="https://img.icons8.com/?size=100&id=73848&format=png&color=ffffff" alt="Send">
-        </button>
-        <button onclick="sendImage()" aria-label="Send image">
-          <img src="https://img.icons8.com/?size=100&id=5376&format=png&color=ffffff" alt="Camera">
-        </button>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="menu-button" onclick="toggleMenu()">
+        <i class="fas fa-ellipsis-v"></i>
+        <div class="menu-dropdown" id="menu-dropdown">
+          <div onclick="setMode('conversation')">Conversation Mode</div>
+          <div onclick="setMode('notes')">Notes Mode</div>
+          <div onclick="setMode('image')">Image Generation</div>
+        </div>
       </div>
     </div>
+
+    <div id="chat-window" class="chat-window"></div>
+    <div id="typing-indicator" class="typing-indicator">
+      <div class="typing-h">H</div>
+    </div>
+
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Type your message..." onkeypress="checkEnter(event)">
+      <button onclick="sendMessage()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+      <button id="image-button" style="display: none;" onclick="sendImage()">
+        <i class="fas fa-image"></i>
+      </button>
+    </div>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    let currentMode = 'conversation';
+    let sessions = JSON.parse(localStorage.getItem('chatSessions')) || [];
+    
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('image-button').style.display = mode === 'image' ? 'block' : 'none';
+      toggleMenu();
+    }
+
+    function toggleMenu() {
+      document.getElementById('menu-dropdown').classList.toggle('show');
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user-message");
+      input.value = "";
+      document.getElementById("typing-indicator").style.display = "block";
+
+      try {
+        let response = await fetchTextResponse(message);
+        if (currentMode === 'notes') {
+          response = formatNotes(response);
+        }
+        addMessage(response, "bot-message", true);
+      } catch (error) {
+        addMessage("Error: Unable to fetch response.", "bot-message");
+      }
+      
+      document.getElementById("typing-indicator").style.display = "none";
+      saveSession();
+    }
+
+    function formatNotes(text) {
+      // Add formatting logic here
+      return text.split('. ')
+        .map(point => `• ${point}`)
+        .join('\n');
+    }
+
+    function addMessage(content, className) {
+      const chatWindow = document.getElementById("chat-window");
+      const messageElement = document.createElement("div");
+      messageElement.className = className;
+      
+      const icons = className === 'bot-message' ? `
+        <div class="message-icons">
+          <i class="fas fa-copy" onclick="copyText(this)"></i>
+          <i class="fas fa-volume-up" onclick="readAloud(this)"></i>
+        </div>
+      ` : '';
+
+      messageElement.innerHTML = `
+        ${content}
+        ${icons}
+        <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+      `;
+      
+      chatWindow.appendChild(messageElement);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function copyText(button) {
+      const text = button.closest('.bot-message').firstChild.textContent;
+      navigator.clipboard.writeText(text);
+    }
+
+    function readAloud(button) {
+      const text = button.closest('.bot-message').firstChild.textContent;
+      const speech = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(speech);
+    }
+
+    function saveSession() {
+      const chatContent = document.getElementById('chat-window').innerHTML;
+      sessions.push({
+        date: new Date().toLocaleString(),
+        content: chatContent
+      });
+      localStorage.setItem('chatSessions', JSON.stringify(sessions));
+      updateSessionList();
+    }
+
+    function clearHistory() {
+      localStorage.clear();
+      sessions = [];
+      updateSessionList();
+      document.getElementById('chat-window').innerHTML = '';
+    }
+
+    function updateSessionList() {
+      const list = document.getElementById('session-list');
+      list.innerHTML = sessions.map((session, index) => `
+        <li class="session-item" onclick="loadSession(${index})">
+          ${session.date}
+        </li>
+      `).join('');
+    }
+
+    // Initial load
+    updateSessionList();
+  </script>
 </body>
 </html>
