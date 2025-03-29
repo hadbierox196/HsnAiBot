@@ -16,6 +16,18 @@ body {
       height: 100vh;
       color: #fff;
 }
+      .typing-placeholder {
+      background: #111;
+      padding: 12px;
+      border-radius: 3px;
+      margin: 10px 0;
+      max-width: 70%;
+      position: relative;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      }
     .menu-button {
       cursor: pointer;
       position: absolute;
@@ -37,18 +49,18 @@ body {
       justify-content: space-between;
       align-items: center;
     }
-       .menu-dropdown {
-      position: absolute;
-      right: 0;
-      top: 30px;
+   .menu-dropdown {
+      position: fixed;
+      right: 20px;
+      top: 60px;
       background: #111;
       border: 1px solid #333;
       border-radius: 4px;
       padding: 10px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       display: none;
+      z-index: 1000;
     }
-
     .menu-dropdown.show {
       display: block;
     }
@@ -157,9 +169,10 @@ body {
       transition: 0.3s;
        }
 
-    .sidebar-hidden {
-      transform: translateX(-100%);
-    }
+       .sidebar-hidden + .chat-container {
+      margin-left: 0;
+      max-width: 100%;
+       }
 
     .notes-content {
       white-space: pre-wrap;
@@ -242,27 +255,32 @@ body {
 
       addMessage(message, "user-message");
       input.value = "";
-      showLoading();
+      
+      // Add typing placeholder
+      const chatWindow = document.getElementById("chat-window");
+      const typingElement = document.createElement("div");
+      typingElement.className = "typing-placeholder bot-message";
+      typingElement.innerHTML = '<div class="typing-h">H</div>';
+      chatWindow.appendChild(typingElement);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
 
       try {
         let response = await fetchTextResponse(message);
-        
         if (currentMode === 'notes') {
           response = formatNotes(response);
-          addMessage(`<div class="notes-content">${response}</div>`, "bot-message", true);
-        } else {
-          addMessage(response, "bot-message", true);
         }
-
-        if (currentMode === 'image') {
-          showLoading();
-          await fetchAndDisplayImage(message);
+        
+        // Replace typing placeholder with actual message
+        typingElement.remove();
+        addMessage(response, "bot-message", true);
+        
+        if (currentMode !== 'image') {
+          fetchAndDisplayImage(message);
         }
       } catch (error) {
+        typingElement.remove();
         addMessage("Error: Unable to fetch response.", "bot-message");
       }
-      
-      hideLoading();
       saveSession();
     }
 
@@ -329,14 +347,6 @@ body {
       
       chatWindow.appendChild(messageElement);
       chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    function showLoading() {
-      document.getElementById("typing-indicator").style.display = "block";
-    }
-
-    function hideLoading() {
-      document.getElementById("typing-indicator").style.display = "none";
     }
 
     function copyText(button) {
