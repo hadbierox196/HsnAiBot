@@ -276,20 +276,13 @@
       chatWindow.appendChild(messageElement);
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
+function showTypingIndicator() {
+    document.getElementById('typing-indicator').style.display = 'block';
+}
 
-    function showTypingIndicator() {
-      const typingElement = document.createElement("div");
-      typingElement.className = "typing-indicator";
-      typingElement.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-      document.getElementById("chat-window").appendChild(typingElement);
-    }
-
-    function hideTypingIndicator() {
-      const indicators = document.getElementsByClassName("typing-indicator");
-      while(indicators.length > 0) {
-        indicators[0].remove();
-      }
-    }
+function hideTypingIndicator() {
+    document.getElementById('typing-indicator').style.display = 'none';
+}
 
     function downloadImage(url, prompt) {
       const link = document.createElement('a');
