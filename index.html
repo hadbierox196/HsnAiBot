@@ -3,39 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Texting Style Chat</title>
+  <title>Cyber Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    /* ... (keep previous styles) ... */
-body {
+    body {
       margin: 0;
       font-family: 'Orbitron', sans-serif;
       background: #000;
-      display: flex;
       height: 100vh;
       color: #fff;
-}
-      .typing-placeholder {
-      background: #111;
-      padding: 12px;
-      border-radius: 3px;
-      margin: 10px 0;
-      max-width: 70%;
-      position: relative;
-      min-height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      }
-    .menu-button {
-      cursor: pointer;
-      position: absolute;
-      right: 20px;
     }
-       .chat-container {
-      flex: 1;
+
+    .chat-container {
       max-width: 800px;
+      margin: 0 auto;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -46,11 +28,11 @@ body {
       padding: 20px;
       border-bottom: 1px solid #333;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      justify-content: flex-end;
     }
-   .menu-dropdown {
-      position: fixed;
+
+    .menu-dropdown {
+      position: absolute;
       right: 20px;
       top: 60px;
       background: #111;
@@ -61,6 +43,7 @@ body {
       display: none;
       z-index: 1000;
     }
+
     .menu-dropdown.show {
       display: block;
     }
@@ -89,29 +72,18 @@ body {
       margin-right: auto;
     }
 
+    .bot-message img {
+      max-width: 100%;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
     .message-icons {
       position: absolute;
       right: 5px;
       bottom: 5px;
       display: flex;
       gap: 8px;
-    }
-
-    .typing-indicator {
-      display: none;
-      padding: 10px;
-      text-align: center;
-    }
-
-    .typing-h {
-      animation: rotate 1s infinite;
-      font-weight: 700;
-      color: #666;
-    }
-
-    @keyframes rotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
 
     .input-container {
@@ -137,80 +109,48 @@ body {
       color: #fff;
     }
 
-    .session-list {
-      list-style: none;
-      padding: 0;
-      color: #fff;
-    }
-
-    .session-item {
-      padding: 10px;
-      cursor: pointer;
-      border-bottom: 1px solid #333;
-    }
-
-    .toggle-sidebar {
-      margin-right: 20px;
-    }
-
-    .typing-indicator {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: none;
-      z-index: 1000;
-    }
-       .sidebar {
-      width: 250px;
-      background: #111;
-      padding: 20px;
-      border-right: 1px solid #333;
-      transition: 0.3s;
-       }
-
-       .sidebar-hidden + .chat-container {
-      margin-left: 0;
-      max-width: 100%;
-       }
-
     .notes-content {
       white-space: pre-wrap;
-      font-family: 'Orbitron', sans-serif;
     }
 
     .notes-content h3 {
-      font-weight: bold;
+      color: #0ff;
       margin: 10px 0;
     }
 
     .notes-content ul {
       margin: 5px 0;
       padding-left: 20px;
+      list-style-type: '-> ';
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .typing-h {
+      animation: rotate 1s infinite;
+      font-weight: 700;
+      color: #666;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <!-- Keep previous HTML structure -->
-  <div class="sidebar" id="sidebar">
-    <h3>Chat History</h3>
-    <ul class="session-list" id="session-list"></ul>
-    <button onclick="clearHistory()">Clear History</button>
-  </div>
-
   <div class="chat-container">
     <div class="chat-header">
-      <div>
-        <button class="toggle-sidebar" onclick="toggleSidebar()">
-          <i class="fas fa-bars"></i>
-        </button>
-        <div class="menu-button" onclick="toggleMenu()">
-          <i class="fas fa-ellipsis-v"></i>
-          <div class="menu-dropdown" id="menu-dropdown">
-            <div onclick="setMode('conversation')">Conversation Mode</div>
-            <div onclick="setMode('notes')">Notes Mode</div>
-            <div onclick="setMode('image')">Image Generation</div>
-          </div>
+      <div class="menu-button" onclick="toggleMenu()">
+        <i class="fas fa-ellipsis-v"></i>
+        <div class="menu-dropdown" id="menu-dropdown">
+          <div onclick="setMode('conversation')">Conversation Mode</div>
+          <div onclick="setMode('notes')">Notes Mode</div>
+          <div onclick="setMode('image')">Image Generation</div>
         </div>
       </div>
     </div>
@@ -224,9 +164,6 @@ body {
       <input type="text" id="user-input" placeholder="Type your message..." onkeypress="checkEnter(event)">
       <button onclick="sendMessage()">
         <i class="fas fa-paper-plane"></i>
-      </button>
-      <button id="image-button" style="display: none;" onclick="sendImage()">
-        <i class="fas fa-image"></i>
       </button>
     </div>
   </div>
@@ -255,32 +192,23 @@ body {
 
       addMessage(message, "user-message");
       input.value = "";
-      
-      // Add typing placeholder
-      const chatWindow = document.getElementById("chat-window");
-      const typingElement = document.createElement("div");
-      typingElement.className = "typing-placeholder bot-message";
-      typingElement.innerHTML = '<div class="typing-h">H</div>';
-      chatWindow.appendChild(typingElement);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
 
+      if (currentMode === 'image') {
+        generateImage(message);
+        return;
+      }
+
+      showTypingIndicator();
       try {
         let response = await fetchTextResponse(message);
         if (currentMode === 'notes') {
           response = formatNotes(response);
         }
-        
-        // Replace typing placeholder with actual message
-        typingElement.remove();
-        addMessage(response, "bot-message", true);
-        
-        if (currentMode !== 'image') {
-          fetchAndDisplayImage(message);
-        }
+        addMessage(response, "bot-message");
       } catch (error) {
-        typingElement.remove();
         addMessage("Error: Unable to fetch response.", "bot-message");
       }
+      hideTypingIndicator();
       saveSession();
     }
 
@@ -293,38 +221,36 @@ body {
       }
     }
 
-    function formatNotes(text) {
-      const addTypos = (str) => str.replace(/(\b\w+\b)/g, (match) => 
-        Math.random() < 0.1 ? match.slice(0, -1) : match
-      );
-
-      return text.split('. ')
-        .filter(Boolean)
-        .map((point, index) => {
-          let formatted = addTypos(point);
-          if (index % 3 === 0) {
-            return `<h3>${formatted}</h3>\n<ul><li>`;
-          }
-          return `• ${formatted}`;
-        })
-        .join('\n')
-        .replace(/<\/li><h3/g, '</li></ul>\n<h3')
-        .replace(/<ul>/g, '')
-        .replace(/<\/ul>/g, '');
+    function generateImage(prompt) {
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512`;
+      const messageElement = document.createElement("div");
+      messageElement.className = "bot-message";
+      messageElement.innerHTML = `
+        <div>Generated image for: ${prompt}</div>
+        <img src="${imageUrl}" alt="Generated image" class="generated-image" />
+        <div class="message-icons">
+          <i class="fas fa-download" onclick="downloadImage('${imageUrl}', '${prompt}')"></i>
+        </div>
+        <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+      `;
+      document.getElementById("chat-window").appendChild(messageElement);
+      saveSession();
     }
 
-    async function fetchAndDisplayImage(prompt) {
-      if (currentMode !== 'image') return;
+    function formatNotes(text) {
+      const formattedText = text
+        .replace(/(\d+\.\s)/g, '<h3>$1</h3>')
+        .replace(/(•\s)/g, '<li>')
+        .split('\n')
+        .map(line => {
+          if (line.startsWith('•')) return `<ul>${line}</ul>`;
+          if (line.startsWith('h3>')) return line;
+          return `<p>${line}</p>`;
+        })
+        .join('')
+        .replace(/<\/ul><ul>/g, '');
       
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
-      const imageElement = document.createElement("img");
-      imageElement.src = imageUrl;
-      imageElement.alt = "Generated Image";
-      imageElement.style.maxWidth = "100%";
-      imageElement.classList.add("generated-image");
-      const chatWindow = document.getElementById("chat-window");
-      chatWindow.appendChild(imageElement);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      return `<div class="notes-content">${formattedText}</div>`;
     }
 
     function addMessage(content, className) {
@@ -347,6 +273,29 @@ body {
       
       chatWindow.appendChild(messageElement);
       chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const typingElement = document.createElement("div");
+      typingElement.className = "typing-indicator";
+      typingElement.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+      document.getElementById("chat-window").appendChild(typingElement);
+    }
+
+    function hideTypingIndicator() {
+      const indicators = document.getElementsByClassName("typing-indicator");
+      while(indicators.length > 0) {
+        indicators[0].remove();
+      }
+    }
+
+    function downloadImage(url, prompt) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `cyber-${prompt.replace(/\s+/g, '-')}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function copyText(button) {
