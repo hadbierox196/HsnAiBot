@@ -123,7 +123,11 @@
 }
 
 .blue-text {
-  color: #00f;
+  color: #ADD8E6;
+}
+
+.green-text {
+  color: #32CD32; /* Bright green color */
 }
 
     .typing-indicator {
@@ -241,11 +245,14 @@
       saveSession();
     }
 function formatNotes(text) {
-  // Add blue text formatting
-  const blueFormatted = text.replace(/\*\*(.*?)\*\*/g, '<span class="blue-text">$1</span>');
+  // First handle ###text### with green color
+  let formattedText = text.replace(/###(.*?)###/g, '<span class="green-text">$1</span>');
+  
+  // Then handle **text** with blue color
+  formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<span class="blue-text">$1</span>');
   
   // Process lines
-  const lines = blueFormatted.split('\n');
+  const lines = formattedText.split('\n');
   let htmlContent = '';
   let inList = false;
 
