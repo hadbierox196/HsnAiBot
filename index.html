@@ -259,7 +259,7 @@
     }
 function formatNotes(text) {
   // First handle ###text### with green color
-  let formattedText = text.replace(/###(.*?)###/g, '<span class="green-text">$1</span>');
+  let formattedText = text.replace(/###(.*?)/g, '<span class="green-text">$1</span>');
   
   // Then handle **text** with blue color
   formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<span class="blue-text">$1</span>');
