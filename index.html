@@ -192,31 +192,46 @@
     }
 
     async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (!message) return;
+  const input = document.getElementById("user-input");
+  let message = input.value.trim();
+  if (!message) return;
 
-      addMessage(message, "user-message");
-      input.value = "";
+  addMessage(message, "user-message");
+  input.value = "";
 
-      if (currentMode === 'image') {
-        generateImage(message);
-        return;
-      }
+  if (currentMode === 'image') {
+    generateImage(message);
+    return;
+  }
 
-      showTypingIndicator();
-      try {
-        let response = await fetchTextResponse(message);
-        if (currentMode === 'notes') {
-          response = formatNotes(response);
-        }
-        addMessage(response, "bot-message");
-      } catch (error) {
-        addMessage("Error: Unable to fetch response.", "bot-message");
-      }
-      hideTypingIndicator();
-      saveSession();
+  showTypingIndicator();
+  try {
+    // Prepend notes formatting instructions if in notes mode
+    let processedPrompt = message;
+    if (currentMode === 'notes') {
+      processedPrompt = `Format the response with:
+      - **Bolded** headings
+      - Bullet points
+      - Occasional spelling errors
+      - Short paragraphs
+      - Organized, concise ideas
+      - No extra blank lines
+      - Use **blue** for emphasis and ###green### for key terms
+      
+      Now respond to: ${message}`;
     }
+
+    let response = await fetchTextResponse(processedPrompt);
+    if (currentMode === 'notes') {
+      response = formatNotes(response); // Still format the response visually
+    }
+    addMessage(response, "bot-message");
+  } catch (error) {
+    addMessage("Error: Unable to fetch response.", "bot-message");
+  }
+  hideTypingIndicator();
+  saveSession();
+}
 
     async function fetchTextResponse(prompt) {
       try {
