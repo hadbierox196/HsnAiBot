@@ -1,9 +1,12 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber Chat</title>
+  <title>HSN Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
@@ -131,20 +134,16 @@
     }
 
     .typing-h {
-      display: inline-block;
-      font-size: 20px;
-      font-weight: 700;
-      color: #666;
-      animation: rotate 1s infinite linear;
+  display: inline-block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #666;
+  animation: rotate 1s infinite linear;
     }
 
     @keyframes rotate {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
-    }
-
-    .error-message {
-      color: #ff5555;
     }
   </style>
 </head>
@@ -173,8 +172,7 @@
       </button>
     </div>
   </div>
-
-  <script>
+<script>
     let currentMode = 'conversation';
     let sessions = JSON.parse(localStorage.getItem('chatSessions')) || [];
     
@@ -184,6 +182,7 @@
 
     function setMode(mode) {
       currentMode = mode;
+      document.getElementById('image-button').style.display = mode === 'image' ? 'block' : 'none';
       toggleMenu();
     }
 
@@ -200,7 +199,7 @@
       input.value = "";
 
       if (currentMode === 'image') {
-        await generateImage(message);
+        generateImage(message);
         return;
       }
 
@@ -227,78 +226,20 @@
       }
     }
 
-    async function generateImage(prompt) {
-      showTypingIndicator();
-      const chatWindow = document.getElementById("chat-window");
+    function generateImage(prompt) {
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512`;
       const messageElement = document.createElement("div");
       messageElement.className = "bot-message";
-      
-      try {
-        // First try with pollinations.ai
-        let imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512`;
-        
-        // Check if the image is valid (not black)
-        const isValid = await checkImageValidity(imageUrl);
-        
-        if (!isValid) {
-          // Fallback to another image generation service
-          imageUrl = `https://source.unsplash.com/512x512/?${encodeURIComponent(prompt)}`;
-        }
-        
-        messageElement.innerHTML = `
-          <div>Generated image for: ${prompt}</div>
-          <img src="${imageUrl}" alt="Generated image" class="generated-image" onerror="this.onerror=null;this.src='https://source.unsplash.com/512x512/?${encodeURIComponent(prompt.split(' ')[0])}'" />
-          <div class="message-icons">
-            <i class="fas fa-download" onclick="downloadImage('${imageUrl}', '${prompt}')"></i>
-          </div>
-          <div class="timestamp">${new Date().toLocaleTimeString()}</div>
-        `;
-      } catch (error) {
-        messageElement.innerHTML = `
-          <div class="error-message">Failed to generate image for: ${prompt}</div>
-          <div class="timestamp">${new Date().toLocaleTimeString()}</div>
-        `;
-      }
-      
-      chatWindow.appendChild(messageElement);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-      hideTypingIndicator();
+      messageElement.innerHTML = `
+        <div>Generated image for: ${prompt}</div>
+        <img src="${imageUrl}" alt="Generated image" class="generated-image" />
+        <div class="message-icons">
+          <i class="fas fa-download" onclick="downloadImage('${imageUrl}', '${prompt}')"></i>
+        </div>
+        <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+      `;
+      document.getElementById("chat-window").appendChild(messageElement);
       saveSession();
-    }
-
-    async function checkImageValidity(url) {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "Anonymous";
-        img.onload = function() {
-          // Create canvas to analyze image
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          
-          // Check if image is mostly black
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = imageData.data;
-          let blackPixelCount = 0;
-          
-          for (let i = 0; i < data.length; i += 4) {
-            // Check if pixel is black (R, G, B all < 10)
-            if (data[i] < 10 && data[i+1] < 10 && data[i+2] < 10) {
-              blackPixelCount++;
-            }
-          }
-          
-          // If more than 50% of pixels are black, consider it invalid
-          const isBlackImage = blackPixelCount / (data.length / 4) > 0.5;
-          resolve(!isBlackImage);
-        };
-        img.onerror = function() {
-          resolve(false);
-        };
-        img.src = url;
-      });
     }
 
     function formatNotes(text) {
@@ -338,14 +279,13 @@
       chatWindow.appendChild(messageElement);
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
+function showTypingIndicator() {
+    document.getElementById('typing-indicator').style.display = 'block';
+}
 
-    function showTypingIndicator() {
-      document.getElementById('typing-indicator').style.display = 'block';
-    }
-
-    function hideTypingIndicator() {
-      document.getElementById('typing-indicator').style.display = 'none';
-    }
+function hideTypingIndicator() {
+    document.getElementById('typing-indicator').style.display = 'none';
+}
 
     function downloadImage(url, prompt) {
       const link = document.createElement('a');
@@ -393,13 +333,11 @@
 
     function updateSessionList() {
       const list = document.getElementById('session-list');
-      if (list) {
-        list.innerHTML = sessions.map((session, index) => `
-          <li class="session-item" onclick="loadSession(${index})">
-            ${session.date}
-          </li>
-        `).join('');
-      }
+      list.innerHTML = sessions.map((session, index) => `
+        <li class="session-item" onclick="loadSession(${index})">
+          ${session.date}
+        </li>
+      `).join('');
     }
 
     // Initialize
