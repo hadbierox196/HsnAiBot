@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,6 +52,15 @@
 
     .menu-dropdown.show {
       display: block;
+    }
+
+    .menu-dropdown div {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .menu-dropdown div:hover {
+      background: #222;
     }
 
     .chat-window {
@@ -115,24 +123,25 @@
       cursor: pointer;
       color: #fff;
     }
-.notes-content li {
-  color: #fff;
-  margin: 5px 0;
-}
+    
+    .notes-content li {
+      color: #fff;
+      margin: 5px 0;
+    }
 
-.notes-content li::before {
-  content: '';
-  color: #0ff;
-  margin-right: 8px;
-}
+    .notes-content li::before {
+      content: '';
+      color: #0ff;
+      margin-right: 8px;
+    }
 
-.blue-text {
-  color: #ADD8E6;
-}
+    .blue-text {
+      color: #ADD8E6;
+    }
 
-.green-text {
-  color: #32CD32; /* Bright green color */
-}
+    .green-text {
+      color: #32CD32; /* Bright green color */
+    }
 
     .typing-indicator {
       display: none;
@@ -141,16 +150,95 @@
     }
 
     .typing-h {
-  display: inline-block;
-  font-size: 20px;
-  font-weight: 700;
-  color: #666;
-  animation: rotate 1s infinite linear;
+      display: inline-block;
+      font-size: 20px;
+      font-weight: 700;
+      color: #666;
+      animation: rotate 1s infinite linear;
     }
 
     @keyframes rotate {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
+    }
+
+    /* Prompt Engineering Form Styles */
+    .prompt-form {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      background: #111;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #333;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .prompt-form.active {
+      display: flex;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-field label {
+      font-size: 12px;
+      color: #0ff;
+    }
+
+    .form-field textarea {
+      background: #222;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 10px;
+      border-radius: 3px;
+      resize: vertical;
+      min-height: 50px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .form-field textarea:focus {
+      border-color: #0ff;
+      outline: none;
+    }
+
+    .form-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .form-button {
+      background: #222;
+      border: 1px solid #333;
+      color: #0ff;
+      padding: 8px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .form-button:hover {
+      background: #333;
+    }
+
+    .form-button.primary {
+      background: linear-gradient(45deg, #8A2BE2, #DA70D6);
+      color: white;
+    }
+
+    .cyan-highlight {
+      color: #0ff;
+      font-weight: bold;
+    }
+
+    .purple-highlight {
+      color: #DA70D6;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -162,12 +250,45 @@
         <div class="menu-dropdown" id="menu-dropdown">
           <div onclick="setMode('conversation')">Conversation Mode</div>
           <div onclick="setMode('notes')">Notes Mode</div>
+          <div onclick="setMode('prompt-engineering')">Prompt Engineering</div>
           <div onclick="setMode('image')">Image Generation</div>
         </div>
       </div>
     </div>
 
-    <div id="chat-window" class="chat-window"></div>
+    <div id="chat-window" class="chat-window">
+      <!-- Chat messages will appear here -->
+      <div id="prompt-form" class="prompt-form">
+        <div class="form-field">
+          <label>Intent/Goal</label>
+          <textarea id="intent" placeholder="What do you want to achieve?"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Output Format</label>
+          <textarea id="output-format" placeholder="Text, code, image, etc."></textarea>
+        </div>
+        <div class="form-field">
+          <label>Key Requirements</label>
+          <textarea id="requirements" placeholder="Must-have details, rules, constraints"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Context/Background</label>
+          <textarea id="context" placeholder="Who it's for, why it's needed"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Optional Features</label>
+          <textarea id="optional" placeholder="Extra preferences, style"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Priority/Focus</label>
+          <textarea id="priority" placeholder="What's most important if tradeoffs exist"></textarea>
+        </div>
+        <div class="form-buttons">
+          <button class="form-button" onclick="cancelPromptForm()">Cancel</button>
+          <button class="form-button primary" onclick="generateEngineeredPrompt()">Generate Prompt</button>
+        </div>
+      </div>
+    </div>
     <div id="typing-indicator" class="typing-indicator">
       <div class="typing-h">H</div>
     </div>
@@ -179,7 +300,8 @@
       </button>
     </div>
   </div>
-<script>
+
+  <script>
     let currentMode = 'conversation';
     let sessions = JSON.parse(localStorage.getItem('chatSessions')) || [];
     
@@ -189,7 +311,9 @@
 
     function setMode(mode) {
       currentMode = mode;
-      document.getElementById('image-button').style.display = mode === 'image' ? 'block' : 'none';
+      document.getElementById('prompt-form').classList.toggle('active', mode === 'prompt-engineering');
+      document.getElementById('user-input').style.display = mode === 'prompt-engineering' ? 'none' : 'block';
+      document.querySelector('.input-container button').style.display = mode === 'prompt-engineering' ? 'none' : 'block';
       toggleMenu();
     }
 
@@ -197,50 +321,107 @@
       document.getElementById('menu-dropdown').classList.toggle('show');
     }
 
-    async function sendMessage() {
-  const input = document.getElementById("user-input");
-  let message = input.value.trim();
-  if (!message) return;
+    function cancelPromptForm() {
+      setMode('conversation');
+    }
 
-  addMessage(message, "user-message");
-  input.value = "";
-
-  if (currentMode === 'image') {
-    generateImage(message);
-    return;
-  }
-
-  showTypingIndicator();
-  try {
-    // Prepend notes formatting instructions if in notes mode
-    let processedPrompt = message;
-    if (currentMode === 'notes') {
-      processedPrompt = `Format the response with:
-      - **Bolded** headings
-      - Bullet points
-      - Occasional spelling errors
-      - Short paragraphs
-      - Organized, concise ideas
-      - No extra blank lines
-      - Use ** ** for emphasis and ### ### for key terms
+    function generateEngineeredPrompt() {
+      const intent = document.getElementById('intent').value.trim();
+      const outputFormat = document.getElementById('output-format').value.trim();
+      const requirements = document.getElementById('requirements').value.trim();
+      const context = document.getElementById('context').value.trim();
+      const optional = document.getElementById('optional').value.trim();
+      const priority = document.getElementById('priority').value.trim();
       
-      Now respond to: ${message}`;
+      let engineeredPrompt = "";
+
+      if (intent) engineeredPrompt += `<span class="cyan-highlight">Intent:</span> ${intent}\n\n`;
+      if (outputFormat) engineeredPrompt += `<span class="cyan-highlight">Output Format:</span> ${outputFormat}\n\n`;
+      if (requirements) engineeredPrompt += `<span class="cyan-highlight">Requirements:</span> ${requirements}\n\n`;
+      if (context) engineeredPrompt += `<span class="cyan-highlight">Context:</span> ${context}\n\n`;
+      if (optional) engineeredPrompt += `<span class="cyan-highlight">Optional Features:</span> ${optional}\n\n`;
+      if (priority) engineeredPrompt += `<span class="cyan-highlight">Priority:</span> ${priority}`;
+      
+      // Add to chat as user message with formatting
+      addMessage(engineeredPrompt, "user-message");
+
+      // Clear form
+      document.getElementById('intent').value = "";
+      document.getElementById('output-format').value = "";
+      document.getElementById('requirements').value = "";
+      document.getElementById('context').value = "";
+      document.getElementById('optional').value = "";
+      document.getElementById('priority').value = "";
+      
+      // Switch back to conversation mode and process the response
+      setMode('conversation');
+      
+      // Now let's process the AI response
+      processPromptResponse(engineeredPrompt);
     }
 
-    let response = await fetchTextResponse(processedPrompt);
-    if (currentMode === 'notes') {
-      response = formatNotes(response); // Still format the response visually
+    async function processPromptResponse(prompt) {
+      showTypingIndicator();
+      try {
+        const formattedPrompt = prompt.replace(/<span class="cyan-highlight">|<\/span>/g, "");
+        let response = await fetchTextResponse(formattedPrompt);
+        
+        // Add some formatting to make it look nicer
+        response = `<span class="purple-highlight">Engineered Response:</span>\n\n${response}`;
+        
+        addMessage(response, "bot-message");
+      } catch (error) {
+        addMessage("Error: Unable to fetch response for your engineered prompt.", "bot-message");
+      }
+      hideTypingIndicator();
+      saveSession();
     }
-    addMessage(response, "bot-message");
-  } catch (error) {
-    addMessage("Error: Unable to fetch response.", "bot-message");
-  }
-  hideTypingIndicator();
-  saveSession();
-}
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      let message = input.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user-message");
+      input.value = "";
+
+      if (currentMode === 'image') {
+        generateImage(message);
+        return;
+      }
+
+      showTypingIndicator();
+      try {
+        // Prepend formatting instructions based on mode
+        let processedPrompt = message;
+        if (currentMode === 'notes') {
+          processedPrompt = `Format the response with:
+          - **Bolded** headings
+          - Bullet points
+          - Occasional spelling errors
+          - Short paragraphs
+          - Organized, concise ideas
+          - No extra blank lines
+          - Use ** ** for emphasis and ### ### for key terms
+          
+          Now respond to: ${message}`;
+        }
+
+        let response = await fetchTextResponse(processedPrompt);
+        if (currentMode === 'notes') {
+          response = formatNotes(response); // Format the response visually
+        }
+        addMessage(response, "bot-message");
+      } catch (error) {
+        addMessage("Error: Unable to fetch response.", "bot-message");
+      }
+      hideTypingIndicator();
+      saveSession();
+    }
 
     async function fetchTextResponse(prompt) {
       try {
+        // This is a mock endpoint - replace with your actual API
         const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
         return response.ok ? await response.text() : "Error: Unable to fetch response.";
       } catch (error) {
@@ -263,41 +444,42 @@
       document.getElementById("chat-window").appendChild(messageElement);
       saveSession();
     }
-function formatNotes(text) {
-  // First handle ###text### with green color
-  let formattedText = text.replace(/###(.*?)/g, '<span class="green-text">$1</span>');
-  
-  // Then handle **text** with blue color
-  formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<span class="blue-text">$1</span>');
-  
-  // Process lines
-  const lines = formattedText.split('\n');
-  let htmlContent = '';
-  let inList = false;
 
-  lines.forEach(line => {
-    line = line.trim();
-    if (line.match(/^\d+\./)) {
-      // Heading line
-      if (inList) {
-        htmlContent += '</ul>';
-        inList = false;
-      }
-      htmlContent += `<h3>${line}</h3>`;
-    } else if (line) {
-      // List item line
-      if (!inList) {
-        htmlContent += '<ul>';
-        inList = true;
-      }
-      htmlContent += `<li>${line}</li>`;
+    function formatNotes(text) {
+      // First handle ###text### with green color
+      let formattedText = text.replace(/###(.*?)###/g, '<span class="green-text">$1</span>');
+      
+      // Then handle **text** with blue color
+      formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<span class="blue-text">$1</span>');
+      
+      // Process lines
+      const lines = formattedText.split('\n');
+      let htmlContent = '';
+      let inList = false;
+
+      lines.forEach(line => {
+        line = line.trim();
+        if (line.match(/^\d+\./)) {
+          // Heading line
+          if (inList) {
+            htmlContent += '</ul>';
+            inList = false;
+          }
+          htmlContent += `<h3>${line}</h3>`;
+        } else if (line) {
+          // List item line
+          if (!inList) {
+            htmlContent += '<ul>';
+            inList = true;
+          }
+          htmlContent += `<li>${line}</li>`;
+        }
+      });
+
+      if (inList) htmlContent += '</ul>';
+      
+      return `<div class="notes-content">${htmlContent}</div>`;
     }
-  });
-
-  if (inList) htmlContent += '</ul>';
-  
-  return `<div class="notes-content">${htmlContent}</div>`;
-}
 
     function addMessage(content, className) {
       const chatWindow = document.getElementById("chat-window");
@@ -320,13 +502,14 @@ function formatNotes(text) {
       chatWindow.appendChild(messageElement);
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-function showTypingIndicator() {
-    document.getElementById('typing-indicator').style.display = 'block';
-}
 
-function hideTypingIndicator() {
-    document.getElementById('typing-indicator').style.display = 'none';
-}
+    function showTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'block';
+    }
+
+    function hideTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'none';
+    }
 
     function downloadImage(url, prompt) {
       const link = document.createElement('a');
@@ -374,11 +557,13 @@ function hideTypingIndicator() {
 
     function updateSessionList() {
       const list = document.getElementById('session-list');
-      list.innerHTML = sessions.map((session, index) => `
-        <li class="session-item" onclick="loadSession(${index})">
-          ${session.date}
-        </li>
-      `).join('');
+      if (list) {
+        list.innerHTML = sessions.map((session, index) => `
+          <li class="session-item" onclick="loadSession(${index})">
+            ${session.date}
+          </li>
+        `).join('');
+      }
     }
 
     // Initialize
